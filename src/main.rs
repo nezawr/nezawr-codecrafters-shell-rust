@@ -1,6 +1,8 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
 use std::process;
+use std::env;
+use std::path::Path;
 
 fn main() {
     // Define built-in commands
@@ -38,6 +40,7 @@ fn main() {
 }
 
 fn handle_type(args: &[&str], built_in: &[&str]) {
+
     if args.is_empty() {
         println!("type: missing argument");
         return;
@@ -45,9 +48,17 @@ fn handle_type(args: &[&str], built_in: &[&str]) {
     let target = args.join(" ");
     if built_in.contains(&target.as_str()) {
         println!("{} is a shell builtin", target);
-    } else {
-        println!("{}: not found", target);
+        return
     }
+    let path = env::var("PATH").unwrap_or_default();
+    for dir in path.split(":") {
+        let candidate = format!("{}/{}", dir, target);
+        if Path::new(&candidate).is_file() {
+            println!("{} is {}", target, candidate);
+            return;
+        }
+    }
+    println!("{}: not found", target);
 }
 
 fn handle_echo(args: &[&str]) {
