@@ -19,6 +19,13 @@ fn main() {
         if input.is_empty() {
             continue;
         }
+
+        let parts: Vec<&str> = input.split_whitespace().collect();
+        if !parts.is_empty() && parts[0] == "echo" {
+            let message = parts[1..].join(" ");
+            println!("{}", message);
+            continue;
+        }
         println!("{}: command not found", input)
         }
 }
