@@ -6,7 +6,7 @@ use std::path::Path;
 
 fn main() {
     // Define built-in commands
-    let built_in: &[&str] = &["type", "echo", "exit"];
+    let built_in: &[&str] = &["type", "echo", "exit", "pwd"];
     loop {
         print!("$ ");
         io::stdout().flush().unwrap();
@@ -34,8 +34,16 @@ fn main() {
         match command {
             "type" => handle_type(args, built_in),
             "echo" => handle_echo(args),
+            "pwd"  => handle_pwd(),
             _ => handle_external(command, args),
         }
+    }
+}
+
+fn handle_pwd() {
+    match env::current_dir() {
+        Ok(path) => println!("{}", path.display()),
+        Err(err) => eprintln!("pwd: error: {}", err),
     }
 }
 
