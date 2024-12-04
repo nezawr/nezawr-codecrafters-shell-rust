@@ -46,8 +46,16 @@ fn handle_cd(args: &[&str]) {
         eprintln!("cd: missing argument");
         return;
     }
-    let target = args[0];
-    if let Err(_) = env::set_current_dir(target) {
+    let mut target = args[0].to_string();
+    if target == "~" || target.starts_with("~/") {
+        if let Ok(home) = env::var("HOME") {
+            target = target.replacen("~", &home, 1);
+        } else {
+            eprintln!("cd: HOME environment variable not set");
+            return;
+        }
+    }
+    if let Err(_) = env::set_current_dir(&target) {
         eprintln!("cd: {}: No such file or directory", target)
     }
 }
