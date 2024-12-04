@@ -6,7 +6,7 @@ use std::path::Path;
 
 fn main() {
     // Define built-in commands
-    let built_in: &[&str] = &["type", "echo", "exit", "pwd"];
+    let built_in: &[&str] = &["type", "echo", "exit", "pwd", "ce"];
     loop {
         print!("$ ");
         io::stdout().flush().unwrap();
@@ -35,8 +35,20 @@ fn main() {
             "type" => handle_type(args, built_in),
             "echo" => handle_echo(args),
             "pwd"  => handle_pwd(),
+            "cd"   => handle_cd(args),
             _ => handle_external(command, args),
         }
+    }
+}
+
+fn handle_cd(args: &[&str]) {
+    if args.is_empty() {
+        eprintln!("cd: missing argument");
+        return;
+    }
+    let target = args[0];
+    if let Err(_) = env::set_current_dir(target) {
+        eprintln!("cd: {}: No such file or directory", target)
     }
 }
 
