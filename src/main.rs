@@ -46,20 +46,41 @@ fn parse_arguments(input: &str) -> Vec<String> {
     let mut args = Vec::new();
     let mut current = String::new();
     let mut in_single_quotes = false;
+    let mut in_double_quotes = false;
+    let mut escape_next = false;
 
     for c in input.chars() {
+        if escape_next {
+            current.push(c);
+            escape_next = false;
+            continue;
+        }
         match c {
+            '\\' if in_double_quotes => {
+                // Escape next character inside double quotes
+                escape_next = true;
+            }
+            '"' if in_double_quotes => {
+                // End double-quoted argument
+                in_double_quotes = false;
+                args.push(current);
+                current = String::new();
+            }
+            '"' if !in_single_quotes => {
+                // Start double-quoted argument
+                in_double_quotes = true;
+            }
             '\'' if in_single_quotes => {
                 // End single-quoted argument
                 in_single_quotes = false;
                 args.push(current);
                 current = String::new();
             }
-            '\'' if !in_single_quotes => {
+            '\'' if !in_double_quotes => {
                 // Start single-quoted argument
                 in_single_quotes = true;
             }
-            ' ' if !in_single_quotes => {
+            ' ' if !in_single_quotes && !in_double_quotes => {
                 // Space outside quotes ends the current argument
                 if !current.is_empty() {
                     args.push(current);
@@ -76,7 +97,6 @@ fn parse_arguments(input: &str) -> Vec<String> {
     if !current.is_empty() {
         args.push(current);
     }
-
     args
 }
 
