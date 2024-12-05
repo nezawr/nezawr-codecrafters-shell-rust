@@ -26,19 +26,58 @@ fn main() {
         }
 
 
-        let parts: Vec<&str> = input.split_whitespace().collect();
-        let command = parts[0];
-        let args = &parts[1..];
+        let parts: Vec<String> = parse_arguments(input);
+        let command = parts[0].as_str();
+        let args: Vec<&str> = parts[1..].iter().map(String::as_str).collect();
+
 
         // Match and handle commands
         match command {
-            "type" => handle_type(args, built_in),
-            "echo" => handle_echo(args),
+            "type" => handle_type(&args, built_in),
+            "echo" => handle_echo(&args),
             "pwd"  => handle_pwd(),
-            "cd"   => handle_cd(args),
-            _ => handle_external(command, args),
+            "cd"   => handle_cd(&args),
+            _ => handle_external(command, &args),
         }
     }
+}
+
+fn parse_arguments(input: &str) -> Vec<String> {
+    let mut args = Vec::new();
+    let mut current = String::new();
+    let mut in_single_quotes = false;
+
+    for c in input.chars() {
+        match c {
+            '\'' if in_single_quotes => {
+                // End single-quoted argument
+                in_single_quotes = false;
+                args.push(current);
+                current = String::new();
+            }
+            '\'' if !in_single_quotes => {
+                // Start single-quoted argument
+                in_single_quotes = true;
+            }
+            ' ' if !in_single_quotes => {
+                // Space outside quotes ends the current argument
+                if !current.is_empty() {
+                    args.push(current);
+                    current = String::new();
+                }
+            }
+            _ => {
+                // Add character to the current argument
+                current.push(c);
+            }
+        }
+    }
+    // Push the last argument if there's any
+    if !current.is_empty() {
+        args.push(current);
+    }
+
+    args
 }
 
 fn handle_cd(args: &[&str]) {
