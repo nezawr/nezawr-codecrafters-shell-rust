@@ -56,9 +56,9 @@ fn parse_arguments(input: &str) -> Vec<String> {
             continue;
         }
         match c {
-            '\\' if in_double_quotes => {
+            '\\' if !in_single_quotes && !in_double_quotes => {
                 // Escape next character inside double quotes
-                escape_next = false;
+                escape_next = true;
             }
             '"' if in_double_quotes => {
                 // End double-quoted argument
