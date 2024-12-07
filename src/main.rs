@@ -51,33 +51,48 @@ fn parse_arguments(input: &str) -> Vec<String> {
 
     for c in input.chars() {
         if escape_next {
-            current.push(c);
+            // Handle escape sequences
+            if in_double_quotes {
+                match c {
+                    '\\' => current.push('\\'),   // Escaped backslash
+                    '"' => current.push('"'),    // Escaped double quote
+                    '$' => current.push('$'),    // Escaped dollar sign
+                    'n' => current.push('\n'),   // Escaped newline
+                    _ => current.push(c),        // Other characters as-is
+                }
+            } else {
+                current.push(c);                // Outside quotes, backslash escapes nothing
+            }
             escape_next = false;
             continue;
         }
+
         match c {
-            '\\' if !in_single_quotes && !in_double_quotes => {
-                // Escape next character inside double quotes
-                escape_next = true;
+            '\\' => {
+                escape_next = true;             // Start escape sequence
             }
             '"' if in_double_quotes => {
-                // End double-quoted argument
+                // End double quotes
                 in_double_quotes = false;
                 args.push(current);
                 current = String::new();
             }
             '"' if !in_single_quotes => {
-                // Start double-quoted argument
+                // Start or restart double quotes
+                if !current.is_empty() {
+                    args.push(current);
+                    current = String::new();
+                }
                 in_double_quotes = true;
             }
             '\'' if in_single_quotes => {
-                // End single-quoted argument
+                // End single quotes
                 in_single_quotes = false;
                 args.push(current);
                 current = String::new();
             }
             '\'' if !in_double_quotes => {
-                // Start single-quoted argument
+                // Start single quotes
                 in_single_quotes = true;
             }
             ' ' if !in_single_quotes && !in_double_quotes => {
@@ -88,17 +103,30 @@ fn parse_arguments(input: &str) -> Vec<String> {
                 }
             }
             _ => {
-                // Add character to the current argument
-                current.push(c);
+                current.push(c);                // Add character to current argument
             }
         }
     }
-    // Push the last argument if there's any
-    if !current.is_empty() {
-        args.push(current);
+
+    if escape_next {
+        current.push('\\');                     // If escape is unfinished, add backslash
     }
+
+    if !current.is_empty() {
+        args.push(current);                     // Push the last argument
+    }
+
+    if in_single_quotes || in_double_quotes {
+        eprintln!("Error: unmatched quote");    // Handle unmatched quotes
+        return vec![];
+    }
+
     args
 }
+
+
+
+
 
 fn handle_cd(args: &[&str]) {
     if args.is_empty() {
